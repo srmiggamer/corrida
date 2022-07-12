@@ -8,6 +8,7 @@ class Game {
     this.leader1 = createElement("h2");
     this.leader2 = createElement("h2");
     this.playerMoving = false
+    this.leftKeyActive = false
   }
 
   getState() {
@@ -133,6 +134,8 @@ class Game {
       this.showFuelBar();
       this.showLife();
       this.showLeaderboard();
+      this.handleObstacleCollision();
+
 
       //índice da matriz
       var index = 0;
@@ -159,6 +162,12 @@ class Game {
           camera.position.y = cars[index - 1].position.y;
         }
       }
+      //mantendo o carro em movimento 
+      if (this.playerMoving){
+        player.positionY += 5
+        player.update()
+      }
+
 
       //manipulando eventos de teclado
       this.handlePlayerControls();
@@ -242,11 +251,13 @@ class Game {
     }
 
     if (keyIsDown(LEFT_ARROW) && player.positionX > width / 3 - 50) {
+      this.leftKeyActive = true
       player.positionX -= 5;
       player.update();
     }
 
     if (keyIsDown(RIGHT_ARROW) && player.positionX < width / 2 + 300) {
+      this.leftKeyActive = false
       player.positionX += 5;
       player.update();
     }
@@ -261,9 +272,13 @@ class Game {
       collected.remove();
     });
 
-    if( this.playerMoving){
+    if( player.fuel > 0 && this.playerMoving){
       player.fuel -= 0.3
     }
+  if (player.fuel <= 0){
+    gameState = 2 
+    this.gameOver()
+  } 
   }
 
   handlePowerCoins(index) {
@@ -306,6 +321,34 @@ showFuelBar() {
   rect(width / 2 - 100, height - player.positionY - 550, player.fuel, 20);
   noStroke();
   pop();
+}
+gameOver() {
+  swal({
+    title: `Fim de Jogo`,
+    text: "Oops você perdeu a corrida!",
+    imageUrl:
+      "https://cdn.shopify.com/s/files/1/1061/1924/products/Thumbs_Down_Sign_Emoji_Icon_ios10_grande.png",
+    imageSize: "100x100",
+    confirmButtonText: "Obrigado por jogar"
+  });
+}
+
+//colisão com os obstaculos 
+handleObstacleCollision(index) {
+  if (cars[index - 1].collide(obstacles)) {
+    if (this.leftKeyActive) {
+      player.positionX += 100;
+    } else {
+      player.positionX -= 100;
+    }
+
+    //Reduzindo a vida do jogador
+    if (player.life > 0) {
+      player.life -= 185 / 4;
+    }
+
+    player.update();
+  }
 }
 }
 
